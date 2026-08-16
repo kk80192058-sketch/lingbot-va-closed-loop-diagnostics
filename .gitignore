@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+artifacts/raw/
+artifacts/summary/
+*.mp4
+*.pt
+*.pth
+*.safetensors
