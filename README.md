@@ -22,7 +22,7 @@ real observation ──> LingBot-VA server ──> imagined video + action chunk
 ```
 
 The included completed run sweeps prediction horizon `H ∈ {4, 7, 10}` chunks in
-parallel. The supplied aggregation harness is ready for a later feedback sweep
+parallel. A separate aggregation harness is ready for a later feedback sweep
 `N ∈ {1, 2, 4, open_loop}` and records:
 
 - task success rate;
@@ -34,7 +34,8 @@ parallel. The supplied aggregation harness is ready for a later feedback sweep
 
 The three independent workers all used the official `robotwin_i2av` config,
 the official LingBot-VA RobotTwin checkpoint, the same three camera inputs, and
-the same natural-language instruction. Each chunk predicts two video frames.
+the same natural-language instruction. The config advances two latent frames per
+chunk; after VAE temporal decoding, the three runs produced the frame counts below.
 
 | GPU | Horizon (chunks) | Generated frames | Video duration | End-to-end wall time |
 | --- | ---: | ---: | ---: | ---: |
@@ -64,15 +65,29 @@ The three GPUs are used for **independent rollout conditions**, not tensor-paral
 
 ## Reproduce the horizon sweep
 
-Install LingBot-VA and RobotTwin using their official instructions, then run one condition per GPU:
+Install LingBot-VA and download its official RobotTwin checkpoint, then point the
+official config's `wan22_pretrained_model_name_or_path` at the checkpoint.
+Run the three independent workers with:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 LINGBOT_NUM_CHUNKS=4  torchrun --standalone --nproc_per_node=1 -m wan_va.wan_va_server --config-name robotwin_i2av --save_root results/horizon_4
-CUDA_VISIBLE_DEVICES=1 LINGBOT_NUM_CHUNKS=7  torchrun --standalone --nproc_per_node=1 -m wan_va.wan_va_server --config-name robotwin_i2av --save_root results/horizon_7
-CUDA_VISIBLE_DEVICES=2 LINGBOT_NUM_CHUNKS=10 torchrun --standalone --nproc_per_node=1 -m wan_va.wan_va_server --config-name robotwin_i2av --save_root results/horizon_10
+LINGBOT_VA_ROOT=/data/lingbot-va \
+MODEL_ROOT=/data/models/lingbot-va-posttrain-robotwin \
+PYTHON_BIN=/path/to/python \
+bash scripts/run_horizon_sweep.sh
 ```
 
-The run manifest is in `artifacts/rollout_metrics.jsonl`. For a RobotTwin
+The script writes workers' logs and videos to `artifacts/generated/` by default.
+Turn those outputs into a verified manifest with:
+
+```bash
+python scripts/make_rollout_manifest.py \
+  --results-root artifacts/generated \
+  --output artifacts/rollout_metrics.jsonl
+```
+
+If logs are stored separately, pass `--logs-root /path/to/logs`.
+
+For a RobotTwin
 feedback experiment, append one episode record per condition to
 `artifacts/metrics.jsonl`, then summarize it with:
 
