@@ -1,0 +1,3 @@
+{"condition":"horizon_4","prediction_horizon_chunks":4,"generated_frames":29,"video_seconds":2.9,"wall_seconds":58,"gpu":"NVIDIA H20 96GB","mode":"official LingBot-VA robotwin_i2av"}
+{"condition":"horizon_7","prediction_horizon_chunks":7,"generated_frames":53,"video_seconds":5.3,"wall_seconds":82,"gpu":"NVIDIA H20 96GB","mode":"official LingBot-VA robotwin_i2av"}
+{"condition":"horizon_10","prediction_horizon_chunks":10,"generated_frames":77,"video_seconds":7.7,"wall_seconds":103,"gpu":"NVIDIA H20 96GB","mode":"official LingBot-VA robotwin_i2av"}
