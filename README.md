@@ -32,15 +32,20 @@ LingBot-VA 同时建模“未来世界会如何变化”和“机器人应该执
 | NVIDIA H20 #1 | 7 | 53 | 5.3 秒 | 82 秒 |
 | NVIDIA H20 #2 | 10 | 77 | 7.7 秒 | 103 秒 |
 
-端到端耗时包含 Checkpoint 冷启动加载和最终视频解码，因此反映的是部署体验，而不是只统计 Denoising 的理想化速度。
-
-![预测长度与端到端时延](artifacts/rollout_scaling.png)
+端到端耗时包含 Checkpoint 冷启动加载和最终视频解码，因此反映的是部署体验，而不是只统计 Denoising 的理想化速度。每个预测长度只执行了一次，表中结果用于展示部署成本，不应被解读为统计显著的性能基准。
 
 | H = 4 | H = 7 | H = 10 |
 | --- | --- | --- |
 | ![4 Chunk Rollout](artifacts/preview/horizon_4.gif) | ![7 Chunk Rollout](artifacts/preview/horizon_7.gif) | ![10 Chunk Rollout](artifacts/preview/horizon_10.gif) |
 
 原始 MP4、GIF 预览和结构化指标都在 [`artifacts/`](artifacts/) 目录中。
+
+### 固定实验设置
+
+- **输入：** 官方 RobotTwin 样例中的 3 路相机图像（高位相机、左腕相机、右腕相机）。
+- **指令：** `Grab the medium-sized white mug, rotate it, place it on the table, and hook it onto the smooth dark gray rack.`
+- **模型模式：** 官方 `robotwin_i2av`；使用 `torch` Attention 后端。
+- **输出：** 预测视频 Latent 与对应动作块；仓库展示的是官方流程解码得到的视频。
 
 ## 实验结论
 
@@ -79,25 +84,16 @@ python scripts/make_rollout_manifest.py \
 
 若日志与视频目录分离，额外传入 `--logs-root /path/to/logs`。
 
-## 后续可扩展方向：RobotTwin 闭环评估
-
-当前已完成的是官方 I2VA 世界动作 Rollout。下一步可接入 **RobotTwin** Episode Client：每执行 `N` 个控制步回传一次真实观测，比较 `N ∈ {1, 2, 4, open_loop}` 的任务成功率、LPIPS/SSIM、状态误差与 Action Latency。
-
-仓库已提供 `scripts/summarize.py`，可汇总这一闭环实验产生的 `artifacts/metrics.jsonl`。本仓库没有伪造未运行的成功率或误差指标。
-
 ## 目录说明
 
 ```text
 artifacts/
 ├── raw/                         # 三段原始 MP4
 ├── preview/                     # GitHub 可直接预览的 GIF
-├── rollout_metrics.jsonl        # 经原始视频与日志核验的指标
-└── rollout_scaling.png          # 预测长度—时延/视频长度图
+└── rollout_metrics.jsonl        # 经原始视频与日志核验的指标
 scripts/
 ├── run_horizon_sweep.sh         # 三张 GPU 并发执行官方 I2VA
-├── make_rollout_manifest.py     # 从原始结果重建指标
-├── plot_rollout_scaling.py      # 绘制趋势图
-└── summarize.py                 # RobotTwin 闭环实验的结果汇总器
+└── make_rollout_manifest.py     # 从原始结果重建指标
 ```
 
 ## 参考资料
